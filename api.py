@@ -1,7 +1,6 @@
 import os
 import torch
 import pickle
-import gdown
 import pandas as pd
 import numpy as np
 from fastapi import FastAPI, HTTPException
@@ -43,25 +42,21 @@ SENSOR_DIMS = {
 MAX_FEATURE_DIM = max(SENSOR_DIMS.values())
 
 # =========================================================================================
-# --- 2. Load the Model (from Google Drive if needed) ---
+# --- 2. Load the Model from Local File ---
 # =========================================================================================
 
 MODEL_FILE = "multimodal_authentication_model.pkl"
-GDRIVE_FILE_ID = "1KiJ174F4NEZAFkROkV3ahMC73pYJfQII"
 
-# Download if not present
 if not os.path.exists(MODEL_FILE):
-    print("[INFO] Downloading model from Google Drive...")
-    url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
-    gdown.download(url, MODEL_FILE, quiet=False)
-    print("[INFO] Model download complete.")
+    raise FileNotFoundError(f"[ERROR] Model file '{MODEL_FILE}' not found in the current directory.")
 
-# Load model
+# Initialize and load model
 model = MultimodalEmbeddingModel(SENSOR_LIST, SENSOR_DIMS, MODEL_PARAMS)
 try:
     model.load_state_dict(torch.load(MODEL_FILE, map_location=DEVICE))
 except Exception as e:
     raise RuntimeError(f"[ERROR] Failed to load model: {e}")
+
 model.eval()
 model.to(DEVICE)
 print("[INFO] Model loaded and ready for inference.")
